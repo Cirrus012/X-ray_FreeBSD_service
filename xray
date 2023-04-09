@@ -1,0 +1,47 @@
+#!/bin/sh
+
+# PROVIDE: xray
+# REQUIRE: DAEMON NETWORKING
+# KEYWORD: shutdown
+
+. /etc/rc.subr
+
+name="xray"
+rcvar="xray_enable"
+command="/usr/sbin/${name}"
+start_cmd="${name}_start"
+stop_cmd="${name}_stop"
+status_cmd="${name}_status"
+pidfile="/var/run/${name}.pid"
+
+xray_start() {
+        echo "Starting..."
+        nohup /bin/x-ray/xray  -c /bin/x-ray/config.json >/var/run/xray.output 2>&1 &
+        echo $! >> /var/run/xray.pid
+        echo "Started."
+}
+
+xray_stop() {
+  echo "Stopping x-ray..."
+  kill `cat /var/run/xray.pid`
+  rm -f /var/run/xray.pid
+  rm -f /var/run/xray.output
+  echo "x-ray stopped."
+}
+
+
+xray_status() {
+ if ps aux | grep -v grep | grep xray > /dev/null; then
+        echo "xray is running"
+        echo "status:"
+        tail -n 14 /var/run/xray.output
+
+        return 0
+    else
+        echo "xray is not running"
+        return 1
+    fi
+}
+
+load_rc_config $name
+run_rc_command "$1"
