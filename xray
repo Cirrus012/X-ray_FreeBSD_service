@@ -7,49 +7,48 @@
 . /etc/rc.subr
 
 name="xray"
-rcvar="xray_enable"
+rcvar="${name}_enable"
 command="/usr/sbin/${name}"
 start_cmd="${name}_start"
 stop_cmd="${name}_stop"
 status_cmd="${name}_status"
 pidfile="/var/run/${name}.pid"
 
+location="/bin/xray/"
+
 xray_start() {
-    if pgrep xray > /dev/null; then
+    if pgrep ${name} > /dev/null; then
 	echo "Already started, nothing to do"
     else
 	echo "Starting..."
-        nohup /bin/x-ray/xray  -c /bin/x-ray/config.json >/var/run/xray.output 2>&1 &
-        echo $! >> /var/run/xray.pid
+        nohup ${location}${name} -c ${location}config.json >>/var/run/${name}.output 2>&1 &
+        echo $! >> /var/run/${name}.pid
         echo "Started."
     fi
 }
 
 xray_stop() {
-	if pgrep xray > /dev/null; then
+	if pgrep ${name} > /dev/null; then
 		echo "Stopping x-ray..."
-		kill `cat /var/run/xray.pid`
-		rm -f /var/run/xray.pid
-		rm -f /var/run/xray.output
+		kill `cat /var/run/${name}.pid`
+		rm -f /var/run/${name}.pid
+		rm -f /var/run/${name}.output
 		echo "x-ray stopped."
 	else
 		echo "Not running, nothing to do."
 	fi
 }
 
-
 xray_status() {
-    if pgrep xray > /dev/null; then
-        echo "xray is running"
-        echo "status:"
-        tail -n 14 /var/run/xray.output
+    if pgrep ${name} > /dev/null; then
+        echo "${name} is running\nStatus:"
+        tail -n 14 /var/run/${name}.output
         return 0
     else
-        echo "xray is not running"
+        echo "${name} is not running"
         return 1
     fi
 }
 
 load_rc_config $name
 run_rc_command "$1"
-
