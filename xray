@@ -15,27 +15,34 @@ status_cmd="${name}_status"
 pidfile="/var/run/${name}.pid"
 
 xray_start() {
-        echo "Starting..."
+    if pgrep xray > /dev/null; then
+	echo "Already started, nothing to do"
+    else
+	echo "Starting..."
         nohup /bin/x-ray/xray  -c /bin/x-ray/config.json >/var/run/xray.output 2>&1 &
         echo $! >> /var/run/xray.pid
         echo "Started."
+    fi
 }
 
 xray_stop() {
-  echo "Stopping x-ray..."
-  kill `cat /var/run/xray.pid`
-  rm -f /var/run/xray.pid
-  rm -f /var/run/xray.output
-  echo "x-ray stopped."
+	if pgrep xray > /dev/null; then
+		echo "Stopping x-ray..."
+		kill `cat /var/run/xray.pid`
+		rm -f /var/run/xray.pid
+		rm -f /var/run/xray.output
+		echo "x-ray stopped."
+	else
+		echo "Not running, nothing to do."
+	fi
 }
 
 
 xray_status() {
- if ps aux | grep -v grep | grep xray > /dev/null; then
+    if pgrep xray > /dev/null; then
         echo "xray is running"
         echo "status:"
         tail -n 14 /var/run/xray.output
-
         return 0
     else
         echo "xray is not running"
@@ -45,3 +52,4 @@ xray_status() {
 
 load_rc_config $name
 run_rc_command "$1"
+
